@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Custom Search Bot",
+    "url": "https://example.com/custom-search-bot-ips.txt",
+    "description": "Internal custom search bot IP ranges",
+    "format": "Text"
+  },
+  {
+    "name": "Internal Monitoring Bot",
+    "url": "https://internal.example.com/monitor-bot-ranges.json",
+    "description": "Internal monitoring service IP ranges",
+    "format": "JSON"
+  }
+]

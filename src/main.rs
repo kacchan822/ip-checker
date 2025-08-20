@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 
 mod commands;
 
+pub use ipchecker::crawler_sources;
 pub use ipchecker::ip_utils;
 
 #[derive(Parser)]

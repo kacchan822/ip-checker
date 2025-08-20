@@ -47,7 +47,7 @@ fn networks_overlap(
         (IpAddr::V4(net1), IpAddr::V4(net2)) => {
             let net1_u32 = u32::from(net1);
             let net2_u32 = u32::from(net2);
-            
+
             // Calculate the smaller prefix (larger network)
             let min_prefix = prefix1.min(prefix2);
             let mask = if min_prefix == 0 {
@@ -55,14 +55,14 @@ fn networks_overlap(
             } else {
                 0xffffffff << (32 - min_prefix)
             };
-            
+
             // Networks overlap if they have the same network address when masked with the smaller prefix
             Ok((net1_u32 & mask) == (net2_u32 & mask))
         }
         (IpAddr::V6(net1), IpAddr::V6(net2)) => {
             let net1_u128 = u128::from(net1);
             let net2_u128 = u128::from(net2);
-            
+
             // Calculate the smaller prefix (larger network)
             let min_prefix = prefix1.min(prefix2);
             let mask = if min_prefix == 0 {
@@ -70,7 +70,7 @@ fn networks_overlap(
             } else {
                 0xffffffffffffffffffffffffffffffff << (128 - min_prefix)
             };
-            
+
             // Networks overlap if they have the same network address when masked with the smaller prefix
             Ok((net1_u128 & mask) == (net2_u128 & mask))
         }
@@ -119,9 +119,19 @@ pub fn check_cidr_overlap(
         println!("✓ Networks {} and {} OVERLAP", network1, network2);
         if verbose {
             let smaller_prefix = prefix1.min(prefix2);
-            let larger_network = if prefix1 < prefix2 { network1 } else { network2 };
-            println!("  The network {} contains or overlaps with the other", larger_network);
-            println!("  Effective overlap determined by /{} prefix", smaller_prefix);
+            let larger_network = if prefix1 < prefix2 {
+                network1
+            } else {
+                network2
+            };
+            println!(
+                "  The network {} contains or overlaps with the other",
+                larger_network
+            );
+            println!(
+                "  Effective overlap determined by /{} prefix",
+                smaller_prefix
+            );
         }
     } else {
         println!("✓ Networks {} and {} do NOT overlap", network1, network2);
@@ -168,7 +178,7 @@ mod tests {
     fn test_networks_overlap_ipv4_overlapping() {
         let ip1 = "192.168.1.0".parse::<IpAddr>().unwrap();
         let ip2 = "192.168.0.0".parse::<IpAddr>().unwrap();
-        
+
         // 192.168.1.0/24 is contained in 192.168.0.0/16
         let result = networks_overlap(ip1, 24, ip2, 16).unwrap();
         assert!(result);
@@ -182,7 +192,7 @@ mod tests {
     fn test_networks_overlap_ipv4_same_network() {
         let ip1 = "192.168.1.0".parse::<IpAddr>().unwrap();
         let ip2 = "192.168.1.0".parse::<IpAddr>().unwrap();
-        
+
         // Same network should overlap
         let result = networks_overlap(ip1, 24, ip2, 24).unwrap();
         assert!(result);
@@ -192,7 +202,7 @@ mod tests {
     fn test_networks_overlap_ipv4_partial_overlap() {
         let ip1 = "192.168.1.0".parse::<IpAddr>().unwrap();
         let ip2 = "192.168.1.128".parse::<IpAddr>().unwrap();
-        
+
         // 192.168.1.0/25 and 192.168.1.128/25 should not overlap
         let result = networks_overlap(ip1, 25, ip2, 25).unwrap();
         assert!(!result);
@@ -206,7 +216,7 @@ mod tests {
     fn test_networks_overlap_ipv4_no_overlap() {
         let ip1 = "192.168.1.0".parse::<IpAddr>().unwrap();
         let ip2 = "10.0.0.0".parse::<IpAddr>().unwrap();
-        
+
         // Completely different networks
         let result = networks_overlap(ip1, 24, ip2, 8).unwrap();
         assert!(!result);
@@ -216,7 +226,7 @@ mod tests {
     fn test_networks_overlap_ipv6_overlapping() {
         let ip1 = "2001:db8::".parse::<IpAddr>().unwrap();
         let ip2 = "2001:db8:1::".parse::<IpAddr>().unwrap();
-        
+
         // 2001:db8:1::/48 is contained in 2001:db8::/32
         let result = networks_overlap(ip1, 32, ip2, 48).unwrap();
         assert!(result);
@@ -226,7 +236,7 @@ mod tests {
     fn test_networks_overlap_ipv6_no_overlap() {
         let ip1 = "2001:db8::".parse::<IpAddr>().unwrap();
         let ip2 = "2002:db8::".parse::<IpAddr>().unwrap();
-        
+
         // Different IPv6 networks
         let result = networks_overlap(ip1, 32, ip2, 32).unwrap();
         assert!(!result);
@@ -236,7 +246,7 @@ mod tests {
     fn test_networks_overlap_different_ip_versions() {
         let ipv4 = "192.168.1.0".parse::<IpAddr>().unwrap();
         let ipv6 = "2001:db8::".parse::<IpAddr>().unwrap();
-        
+
         // IPv4 and IPv6 should never overlap
         let result = networks_overlap(ipv4, 24, ipv6, 32).unwrap();
         assert!(!result);
