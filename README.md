@@ -1,5 +1,10 @@
 # IP Checker
 
+[![Development Status](https://img.shields.io/badge/status-in%20development-yellow)](https://github.com/kacchan822/ip-checker)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> ⚠️ **Work in Progress**: This project is currently under active development. Features may be incomplete or subject to change.
+
 A handy utility tool for IP addresses. For example, you can check for network address overlaps or verify if an IP address matches crawler IP addresses. This tool aims to be a Swiss Army knife for IP address operations.
 
 ## Features
