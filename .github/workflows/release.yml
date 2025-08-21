@@ -16,6 +16,8 @@ jobs:
             target: x86_64-unknown-linux-gnu
             binary_name: ipchecker
             archive_suffix: x86_64-unknown-linux-gnu.tar.gz
+          # Use macos-14 for native Apple Silicon (ARM64) builds.
+          # 'macos-latest' currently points to an x86_64 runner.
           - os: macos-14
             target: aarch64-apple-darwin
             binary_name: ipchecker
@@ -36,10 +38,8 @@ jobs:
       - name: Set version and archive name
         shell: bash
         run: |
-          # GITHUB_REF_NAME is the tag name, e.g., v0.1.0
           VERSION=${GITHUB_REF_NAME}
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          # Construct archive name, e.g., ipchecker-v0.1.0-x86_64-unknown-linux-gnu.tar.gz
           ARCHIVE_NAME="ipchecker-${VERSION}-${{ matrix.archive_suffix }}"
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
 
@@ -54,7 +54,7 @@ jobs:
       - name: Build binary
         run: cargo build --verbose --release --target ${{ matrix.target }}
 
-      - name: Prepare package (Unix)
+      - name: Prepare package and checksum (Unix)
         if: runner.os != 'Windows'
         run: |
           staging_dir="staging"
@@ -62,8 +62,11 @@ jobs:
           cp "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" "$staging_dir/"
           cp LICENSE README.md "$staging_dir/"
           tar -czf "${{ env.ARCHIVE_NAME }}" -C "$staging_dir" .
+          sha256sum "${{ env.ARCHIVE_NAME }}" > "${{ env.ARCHIVE_NAME }}.sha256"
+          echo "Checksum file content:"
+          cat "${{ env.ARCHIVE_NAME }}.sha256"
 
-      - name: Prepare package (Windows)
+      - name: Prepare package and checksum (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
@@ -72,17 +75,11 @@ jobs:
           Copy-Item -Path "target\${{ matrix.target }}\release\${{ matrix.binary_name }}" -Destination $staging_dir
           Copy-Item -Path "LICENSE", "README.md" -Destination $staging_dir
           Compress-Archive -Path "$staging_dir\*" -DestinationPath "${{ env.ARCHIVE_NAME }}"
-
-      - name: Generate checksum file
-        shell: bash
-        run: |
-          if [[ "${{ runner.os }}" == "Windows" ]]; then
-            pwsh -Command "(Get-FileHash -Algorithm SHA256 -LiteralPath '${{ env.ARCHIVE_NAME }}').Hash.ToLower() + '  ${{ env.ARCHIVE_NAME }}' | Set-Content -Path '${{ env.ARCHIVE_NAME }}.sha256'"
-          else
-            sha256sum "${{ env.ARCHIVE_NAME }}" > "${{ env.ARCHIVE_NAME }}.sha256"
-          fi
-          echo "Checksum file content:"
-          cat "${{ env.ARCHIVE_NAME }}.sha256"
+          # Generate checksum and format it like sha256sum (hash filename)
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath "${{ env.ARCHIVE_NAME }}").Hash.ToLower()
+          "$hash  ${{ env.ARCHIVE_NAME }}" | Set-Content -Path "${{ env.ARCHIVE_NAME }}.sha256"
+          Write-Host "Checksum file content:"
+          Get-Content "${{ env.ARCHIVE_NAME }}.sha256"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -104,6 +101,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          # The pattern is scoped to artifacts produced in the current workflow run.
+          # It safely downloads all artifacts from the 'build' job without risk of
+          # including artifacts from other workflow runs.
           pattern: artifact-*
 
       - name: List files for release
