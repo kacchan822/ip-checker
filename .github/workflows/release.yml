@@ -16,13 +16,13 @@ jobs:
             target: x86_64-unknown-linux-gnu
             binary_name: ipchecker
             archive_suffix: x86_64-unknown-linux-gnu.tar.gz
-          # Use macos-14 for native Apple Silicon (ARM64) builds.
-          # 'macos-latest' currently points to an x86_64 runner.
-          - os: macos-14
+          # Use macos-latest for Apple Silicon (ARM64) builds.
+          - os: macos-latest
             target: aarch64-apple-darwin
             binary_name: ipchecker
             archive_suffix: aarch64-apple-darwin.tar.gz
-          - os: macos-latest
+          # Use macos-13 for Intel (x86_64) builds.
+          - os: macos-13
             target: x86_64-apple-darwin
             binary_name: ipchecker
             archive_suffix: x86_64-apple-darwin.tar.gz
@@ -88,7 +88,7 @@ jobs:
           path: |
             ${{ env.ARCHIVE_NAME }}
             ${{ env.ARCHIVE_NAME }}.sha256
-          retention-days: 1
+          retention-days: 5
 
   release:
     name: Create GitHub Release
