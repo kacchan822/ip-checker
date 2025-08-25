@@ -104,7 +104,7 @@ jobs:
           path: artifacts
           # The pattern is scoped to artifacts produced in the current workflow run.
           # It safely downloads all artifacts from the 'build' job without risk of
-          - including artifacts from other workflow runs.
+          # including artifacts from other workflow runs.
           pattern: artifact-*
 
       - name: List files for release
