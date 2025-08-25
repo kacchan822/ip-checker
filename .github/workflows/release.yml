@@ -5,6 +5,9 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
+env:
+  BINARY_NAME: ipchecker
+
 jobs:
   build:
     name: Build on ${{ matrix.os }} for ${{ matrix.target }}
@@ -14,21 +17,19 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            binary_name: ipchecker
+            binary_name: ${{ env.BINARY_NAME }}
             archive_suffix: x86_64-unknown-linux-gnu.tar.gz
-          # Use macos-latest for Apple Silicon (ARM64) builds.
           - os: macos-latest
             target: aarch64-apple-darwin
-            binary_name: ipchecker
+            binary_name: ${{ env.BINARY_NAME }}
             archive_suffix: aarch64-apple-darwin.tar.gz
-          # Use macos-13 for Intel (x86_64) builds.
           - os: macos-13
             target: x86_64-apple-darwin
-            binary_name: ipchecker
+            binary_name: ${{ env.BINARY_NAME }}
             archive_suffix: x86_64-apple-darwin.tar.gz
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            binary_name: ipchecker.exe
+            binary_name: ${{ env.BINARY_NAME }}.exe
             archive_suffix: x86_64-pc-windows-msvc.zip
 
     steps:
@@ -40,7 +41,7 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME}
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          ARCHIVE_NAME="ipchecker-${VERSION}-${{ matrix.archive_suffix }}"
+          ARCHIVE_NAME="${{ env.BINARY_NAME }}-${VERSION}-${{ matrix.archive_suffix }}"
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_ENV
 
       - name: Install Rust toolchain
@@ -71,7 +72,7 @@ jobs:
         shell: pwsh
         run: |
           $staging_dir = "staging"
-          New-Item -ItemType Directory -Path $staging_dir
+          New-Item -ItemType Directory -Path $staging_dir -Force
           Copy-Item -Path "target\${{ matrix.target }}\release\${{ matrix.binary_name }}" -Destination $staging_dir
           Copy-Item -Path "LICENSE", "README.md" -Destination $staging_dir
           Compress-Archive -Path "$staging_dir\*" -DestinationPath "${{ env.ARCHIVE_NAME }}"
@@ -103,7 +104,7 @@ jobs:
           path: artifacts
           # The pattern is scoped to artifacts produced in the current workflow run.
           # It safely downloads all artifacts from the 'build' job without risk of
-          # including artifacts from other workflow runs.
+          - including artifacts from other workflow runs.
           pattern: artifact-*
 
       - name: List files for release
