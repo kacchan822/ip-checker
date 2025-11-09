@@ -20,7 +20,10 @@ jobs:
             target: aarch64-apple-darwin
             binary_name: ipchecker
             archive_suffix: aarch64-apple-darwin.tar.gz
-          - os: macos-13
+          # NOTE: Apple has discontinued support for the x86_64 (Intel) architecture.
+          # GitHub will no longer support this architecture on macOS after the macOS 15
+          # runner image is retired in Fall 2027.
+          - os: macos-15-intel
             target: x86_64-apple-darwin
             binary_name: ipchecker
             archive_suffix: x86_64-apple-darwin.tar.gz
